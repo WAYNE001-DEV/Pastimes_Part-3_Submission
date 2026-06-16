@@ -25,15 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($email) || empty($password)) {
         $error = "Both fields are required.";
     } else {
-        $hashed = md5($password);
-
+        // Fetch admin by email and verify password using bcrypt
         $stmt = $conn->prepare(
-            "SELECT adminID, fullName, email FROM tblAdmin WHERE email = ? AND password = ?"
+            "SELECT adminID, fullName, email, password FROM tblAdmin WHERE email = ?"
         );
         if (!$stmt) {
             $error = "Database error: " . $conn->error;
         } else {
-            $stmt->bind_param("ss", $email, $hashed);
+            $stmt->bind_param("s", $email);
             $stmt->execute();
             $result = $stmt->get_result();
 
@@ -41,13 +40,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = "Invalid admin credentials.";
             } else {
                 $admin = $result->fetch_assoc();
-                $_SESSION['adminID']   = $admin['adminID'];
-                $_SESSION['adminName'] = $admin['fullName'];
-                $_SESSION['adminEmail']= $admin['email'];
-                $_SESSION['role']      = 'admin';
+                
+                // Verify password using bcrypt
+                if (!password_verify($password, $admin['password'])) {
+                    $error = "Invalid admin credentials.";
+                } else {
+                    $_SESSION['adminID']   = $admin['adminID'];
+                    $_SESSION['adminName'] = $admin['fullName'];
+                    $_SESSION['adminEmail']= $admin['email'];
+                    $_SESSION['role']      = 'admin';
 
-                header("Location: index.php");
-                exit;
+                    header("Location: index.php");
+                    exit;
+                }
             }
             $stmt->close();
         }

@@ -89,18 +89,17 @@ class ShoppingCart {
 
     // ── Login: verify user credentials (used before checkout redirect) ─────────
     public function Login(string $email, string $password): bool {
-        $hash = md5($password);
         $s = $this->conn->prepare(
-            "SELECT userID, fullName, role FROM tblUser
-             WHERE email = ? AND password = ? AND status = 'active' AND isVerified = 1"
+            "SELECT userID, fullName, role, password FROM tblUser
+             WHERE email = ? AND status = 'active' AND isVerified = 1"
         );
         if (!$s) return false;
-        $s->bind_param("ss", $email, $hash);
+        $s->bind_param("s", $email);
         $s->execute();
         $user = $s->get_result()->fetch_assoc();
         $s->close();
 
-        if ($user) {
+        if ($user && password_verify($password, $user['password'])) {
             $_SESSION['userID']   = $user['userID'];
             $_SESSION['fullName'] = $user['fullName'];
             $_SESSION['role']     = $user['role'];

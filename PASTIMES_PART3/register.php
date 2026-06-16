@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        $hashed = md5($password);
+        $hashed = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
         $stmt = $conn->prepare(
             "INSERT INTO tblUser (fullName, email, password, province, isVerified, status, role)
              VALUES (?, ?, ?, ?, 0, 'pending', ?)"

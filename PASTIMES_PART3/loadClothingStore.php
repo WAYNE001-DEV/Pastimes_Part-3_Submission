@@ -27,7 +27,7 @@ function run(mysqli $c, string $sql, string $label, array &$log): void {
 
 // ── 1. Drop in FK-safe order ──────────────────────────────────────────────────
 $conn->query("SET FOREIGN_KEY_CHECKS = 0");
-foreach (['tblOrder','tblClothes','tblAdmin','tblUser'] as $t) {
+foreach (['tblOrderLine','tblMessage','tblClothes','tblAdmin','tblUser'] as $t) {
     run($conn, "DROP TABLE IF EXISTS `$t`", "Drop $t", $log);
 }
 $conn->query("SET FOREIGN_KEY_CHECKS = 1");
@@ -78,9 +78,9 @@ CREATE TABLE IF NOT EXISTS tblClothes (
 ) ENGINE=InnoDB CHARACTER SET utf8mb4;
 ", "Create tblClothes", $log);
 
-// ── 5. Create tblOrder ────────────────────────────────────────────────────────
+// ── 5. Create tblOrderLine ───────────────────────────────────────────────────
 run($conn, "
-CREATE TABLE IF NOT EXISTS tblOrder (
+CREATE TABLE IF NOT EXISTS tblOrderLine (
     orderID         INT AUTO_INCREMENT PRIMARY KEY,
     userID          INT           NOT NULL,
     clothesID       INT           NOT NULL,
@@ -90,10 +90,10 @@ CREATE TABLE IF NOT EXISTS tblOrder (
     status          ENUM('pending','processing','shipped','delivered','cancelled')
                                   NOT NULL DEFAULT 'pending',
     createdAt       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_order_user    FOREIGN KEY (userID)    REFERENCES tblUser(userID)    ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_order_clothes FOREIGN KEY (clothesID) REFERENCES tblClothes(clothesID) ON DELETE RESTRICT ON UPDATE CASCADE
+    CONSTRAINT fk_orderline_user    FOREIGN KEY (userID)    REFERENCES tblUser(userID)    ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_orderline_clothes FOREIGN KEY (clothesID) REFERENCES tblClothes(clothesID) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB CHARACTER SET utf8mb4;
-", "Create tblOrder", $log);
+", "Create tblOrderLine", $log);
 
 // ── 6. Seed tblAdmin ──────────────────────────────────────────────────────────
 run($conn, "

@@ -13,7 +13,8 @@ USE ClothingStore;
 -- -----------------------------------------------
 -- Drop tables in reverse FK order
 -- -----------------------------------------------
-DROP TABLE IF EXISTS tblOrder;
+DROP TABLE IF EXISTS tblOrderLine;
+DROP TABLE IF EXISTS tblMessage;
 DROP TABLE IF EXISTS tblClothes;
 DROP TABLE IF EXISTS tblAdmin;
 DROP TABLE IF EXISTS tblUser;
@@ -65,9 +66,9 @@ CREATE TABLE IF NOT EXISTS tblClothes (
 ) ENGINE=InnoDB;
 
 -- -----------------------------------------------
--- tblOrder
+-- tblOrderLine
 -- -----------------------------------------------
-CREATE TABLE IF NOT EXISTS tblOrder (
+CREATE TABLE IF NOT EXISTS tblOrderLine (
     orderID         INT AUTO_INCREMENT PRIMARY KEY,
     userID          INT             NOT NULL,
     clothesID       INT             NOT NULL,
@@ -77,8 +78,8 @@ CREATE TABLE IF NOT EXISTS tblOrder (
     status          ENUM('pending','processing','shipped','delivered','cancelled')
                                     NOT NULL DEFAULT 'pending',
     createdAt       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_order_user    FOREIGN KEY (userID)     REFERENCES tblUser(userID)    ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_order_clothes FOREIGN KEY (clothesID)  REFERENCES tblClothes(clothesID) ON DELETE RESTRICT ON UPDATE CASCADE
+    CONSTRAINT fk_orderline_user    FOREIGN KEY (userID)     REFERENCES tblUser(userID)    ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_orderline_clothes FOREIGN KEY (clothesID)  REFERENCES tblClothes(clothesID) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
 -- -----------------------------------------------
@@ -147,22 +148,6 @@ INSERT INTO tblClothes (sellerID, title, category, brand, size, colour, conditio
 -- -----------------------------------------------
 -- Part 3 Additions
 -- -----------------------------------------------
-
--- tblOrderLine (renamed from tblOrder to match rubric language)
-DROP TABLE IF EXISTS tblOrderLine;
-CREATE TABLE IF NOT EXISTS tblOrderLine (
-    orderID         INT AUTO_INCREMENT PRIMARY KEY,
-    userID          INT             NOT NULL,
-    clothesID       INT             NOT NULL,
-    quantity        INT             NOT NULL DEFAULT 1,
-    totalAmount     DECIMAL(10,2)   NOT NULL,
-    deliveryAddress TEXT            DEFAULT NULL,
-    status          ENUM('pending','processing','shipped','delivered','cancelled')
-                                    NOT NULL DEFAULT 'pending',
-    createdAt       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_orderline_user    FOREIGN KEY (userID)    REFERENCES tblUser(userID)    ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_orderline_clothes FOREIGN KEY (clothesID) REFERENCES tblClothes(clothesID) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
 
 -- tblMessage (admin to user messaging)
 DROP TABLE IF EXISTS tblMessage;

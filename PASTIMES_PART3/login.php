@@ -31,27 +31,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($email) || empty($password)) {
         $error = "Both email and password are required.";
     } else {
-        $hashed = md5($password);
-
-        // Associative read using column names
+        // Fetch user by email and verify password using bcrypt
         $stmt = $conn->prepare(
-            "SELECT userID, fullName, email, province, isVerified, status, role
+            "SELECT userID, fullName, email, province, isVerified, status, role, password
              FROM tblUser
-             WHERE email = ? AND password = ?"
+             WHERE email = ?"
         );
         if (!$stmt) {
             $error = "Database error: " . $conn->error;
         } else {
-            $stmt->bind_param("ss", $email, $hashed);
+            $stmt->bind_param("s", $email);
             $stmt->execute();
             $result = $stmt->get_result();
 
             if ($result->num_rows === 0) {
                 $error = "Incorrect email or password. Please try again.";
             } else {
-                $user = $result->fetch_assoc();   // associative read
-
-                if ($user['isVerified'] != 1 || $user['status'] !== 'active') {
+                $user = $result->fetch_assoc();
+                
+                // Verify password using bcrypt
+                if (!password_verify($password, $user['password'])) {
+                    $error = "Incorrect email or password. Please try again.";
+                } elseif ($user['isVerified'] != 1 || $user['status'] !== 'active') {
                     $error = "Your account is pending administrator verification. Please check back later.";
                 } else {
                     // ── Success: store session ────────────────────────────────────

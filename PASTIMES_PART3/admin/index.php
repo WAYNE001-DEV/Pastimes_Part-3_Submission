@@ -40,10 +40,22 @@ if (isset($_GET['reject'])) {
 // Delete a user
 if (isset($_GET['delete'])) {
     $uid = (int) $_GET['delete'];
-    $stmt = $conn->prepare("DELETE FROM tblUser WHERE userID=?");
-    $stmt->bind_param("i", $uid);
-    $stmt->execute(); $stmt->close();
-    $msg = "🗑️  User deleted.";
+    
+    // Check for dependent order records (foreign key constraint)
+    $checkStmt = $conn->prepare("SELECT COUNT(*) as cnt FROM tblOrderLine WHERE userID = ?");
+    $checkStmt->bind_param("i", $uid);
+    $checkStmt->execute();
+    $checkResult = $checkStmt->get_result()->fetch_assoc();
+    $checkStmt->close();
+    
+    if ($checkResult['cnt'] > 0) {
+        $msg = "⚠️  Cannot delete this user: they have " . $checkResult['cnt'] . " order(s). Please mark them inactive instead.";
+    } else {
+        $stmt = $conn->prepare("DELETE FROM tblUser WHERE userID=?");
+        $stmt->bind_param("i", $uid);
+        $stmt->execute(); $stmt->close();
+        $msg = "🗑️  User deleted.";
+    }
 }
 
 // Add new user
