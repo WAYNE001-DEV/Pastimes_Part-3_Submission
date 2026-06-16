@@ -21,14 +21,27 @@ $editItem = null;
 // ── DELETE ────────────────────────────────────────────────────────────────────
 if (isset($_GET['delete'])) {
     $delID = (int) $_GET['delete'];
-    $s = $conn->prepare("DELETE FROM tblClothes WHERE clothesID = ?");
-    $s->bind_param("i", $delID);
-    if ($s->execute()) {
-        $success = "Item deleted successfully.";
+    
+    // Check for dependent order line records (foreign key constraint)
+    $checkStmt = $conn->prepare("SELECT COUNT(*) as cnt FROM tblorderline WHERE clothesID = ?");
+    $checkStmt->bind_param("i", $delID);
+    $checkStmt->execute();
+    $checkResult = $checkStmt->get_result()->fetch_assoc();
+    $checkStmt->close();
+    
+    if ($checkResult['cnt'] > 0) {
+        $errors[] = "Cannot delete this item: it has " . $checkResult['cnt'] . " order(s) associated with it. 
+                     Please mark it as 'sold' or 'inactive' instead.";
     } else {
-        $errors[] = "Delete failed: " . $conn->error;
+        $s = $conn->prepare("DELETE FROM tblClothes WHERE clothesID = ?");
+        $s->bind_param("i", $delID);
+        if ($s->execute()) {
+            $success = "Item deleted successfully.";
+        } else {
+            $errors[] = "Delete failed: " . $conn->error;
+        }
+        $s->close();
     }
-    $s->close();
 }
 
 // ── LOAD FOR EDIT ─────────────────────────────────────────────────────────────
