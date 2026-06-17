@@ -67,7 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
     $iv = (int)($_POST['isVerified'] ?? 0);
 
     if ($fn && $em && $pw && $pr) {
-        $hashed = md5($pw);
+        // Use bcrypt hashing (not MD5) — matches password_verify() in login pages
+        $hashed = password_hash($pw, PASSWORD_BCRYPT, ['cost' => 12]);
         $status = $iv ? 'active' : 'pending';
         $stmt = $conn->prepare(
             "INSERT INTO tblUser (fullName,email,password,province,isVerified,status) VALUES(?,?,?,?,?,?)"
